@@ -1,136 +1,197 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team To-do</title>
-  <style>
-    :root{--bg:#f4f5f7;--card:#fff;--text:#1a1d23;--muted:#6b7280;--border:#e5e7eb;--accent:#2563eb;--accent-h:#1d4ed8;--open:#f59e0b;--progress:#3b82f6;--done:#10b981;--hi:#ef4444;--mid:#f59e0b;--lo:#9ca3af}
-    *{box-sizing:border-box;margin:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding:24px}
-    .wrap{max-width:860px;margin:0 auto}
-    h1{font-size:1.5rem;margin-bottom:4px}
-    .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
-    form{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px}
-    @media(max-width:700px){form{grid-template-columns:1fr 1fr}}
-    input,select,button{font:inherit;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
-    input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
-    button{cursor:pointer}
-    .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-    .btn-primary:hover{background:var(--accent-h)}
-    .btn-primary:disabled{opacity:.6;cursor:wait}
-    .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-    .toolbar .spacer{flex:1}
-    .chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:6px 14px;font-size:.85rem}
-    .chip.active{background:var(--text);color:#fff;border-color:var(--text)}
-    ul{list-style:none;display:flex;flex-direction:column;gap:8px}
-    li.task{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    li.task.done .title{text-decoration:line-through;color:var(--muted)}
-    .title{font-weight:600;flex:1;min-width:160px}
-    .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--muted)}
-    .badge{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600;color:#fff;border:none}
-    .badge.offen{background:var(--open)}.badge.arbeit{background:var(--progress)}.badge.erledigt{background:var(--done)}
-    .prio{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
-    .prio.Hoch{background:var(--hi)}.prio.Mittel{background:var(--mid)}.prio.Niedrig{background:var(--lo)}
-    .due.over{color:var(--hi);font-weight:600}
-    .del{background:none;border:none;color:var(--muted);font-size:1.1rem;padding:4px 8px}
-    .del:hover{color:var(--hi)}
-    .empty{text-align:center;color:var(--muted);padding:32px 0}
-    .stats{font-size:.85rem;color:var(--muted)}
-    #conn{font-size:.75rem;color:var(--muted)}
-    #conn.live::before{content:"\25CF ";color:var(--done)}
-    #err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;font-size:.9rem}
-    </style>
-  </head>
-  <body>
-    <div class="wrap">
-      <h1>📋 Team To-do</h1>
-    <p class="sub">Gemeinsame Aufgabenliste – synchronisiert sich live für alle. <span id="conn">verbinde…</span>span></p>p>
-    <div id="err"></div>div>
-    <div class="card">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team To-do</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --text:#1a1d23; --muted:#6b7280; --border:#e5e7eb;
+    --accent:#2563eb; --accent-h:#1d4ed8;
+    --open:#f59e0b; --progress:#3b82f6; --done:#10b981;
+    --hi:#ef4444; --mid:#f59e0b; --lo:#9ca3af;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding:24px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{font-size:1.5rem;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+  form{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px}
+  @media(max-width:700px){form{grid-template-columns:1fr 1fr}}
+  input,select,button{font:inherit;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+  input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  button{cursor:pointer}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+  .btn-primary:hover{background:var(--accent-h)}
+  .btn-primary:disabled{opacity:.6;cursor:wait}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+  .toolbar .spacer{flex:1}
+  .chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:6px 14px;font-size:.85rem}
+  .chip.active{background:var(--text);color:#fff;border-color:var(--text)}
+  ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+  li.task{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  li.task.done .title{text-decoration:line-through;color:var(--muted)}
+  .title{font-weight:600;flex:1;min-width:160px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--muted)}
+  .badge{padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:600;color:#fff;border:none}
+  .badge.offen{background:var(--open)} .badge.arbeit{background:var(--progress)} .badge.erledigt{background:var(--done)}
+  .prio{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .prio.Hoch{background:var(--hi)} .prio.Mittel{background:var(--mid)} .prio.Niedrig{background:var(--lo)}
+  .due.over{color:var(--hi);font-weight:600}
+  .del{background:none;border:none;color:var(--muted);font-size:1.1rem;padding:4px 8px}
+  .del:hover{color:var(--hi)}
+  .empty{text-align:center;color:var(--muted);padding:32px 0}
+  .stats{font-size:.85rem;color:var(--muted)}
+  #conn{font-size:.75rem;color:var(--muted)}
+  #conn.live::before{content:"● ";color:var(--done)}
+  #err{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:none;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📋 Team To-do</h1>
+  <p class="sub">Gemeinsame Aufgabenliste – synchronisiert sich live für alle. <span id="conn">verbinde…</span></p>
+  <div id="err"></div>
+
+  <div class="card">
     <form id="addForm">
-    <input id="fTitle" type="text" placeholder="Neue Aufgabe…" required>
-    <input id="fWho" type="text" placeholder="Zuständig" list="people">
-    <datalist id="people"></datalist>datalist>
-    <input id="fDue" type="date" title="Fällig am">
-    <select id="fPrio"><option>Mittel</option><option>Hoch</option><option>Niedrig</option></select>select>
-    <button class="btn-primary" id="addBtn" type="submit">Hinzufügen</button>button>
-    </form>form>
-    </div>div>
-    <div class="toolbar">
-    <button class="chip active" data-f="alle">Alle</button>button>
-    <button class="chip" data-f="Offen">Offen</button>button>
-    <button class="chip" data-f="In Arbeit">In Arbeit</button>button>
-    <button class="chip" data-f="Erledigt">Erledigt</button>button>
-    <span class="spacer"></span>span>
-    <span class="stats" id="stats"></span>span>
-    </div>div>
-    <ul id="list"><li class="empty">Lade Aufgaben…</li>li></ul>ul>
-    </div>div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script>
-    var sb = supabase.createClient("https://hbbizdljommgweemprso.supabase.co","sb_publishable_7ygG8u4rjp5lX6PplyzLlQ_mJfSBsO7");
-    var STATUS = ["Offen","In Arbeit","Erledigt"];
-    var tasks = [];
-    var filter = "alle";
-    function showErr(msg){var el=document.getElementById("err");el.textContent=msg;el.style.display=msg?"block":"none";}
-    function fmtDate(d){if(!d)return "";var p=d.split("-");return p[2]+"."+p[1]+"."+p[0];}
-    function esc(s){var div=document.createElement("div");div.textContent=s||"";return div.innerHTML;}
-    function fetchTasks(){sb.from("todos").select("*").order("created_at",{ascending:false}).then(function(r){if(r.error){showErr("Fehler beim Laden: "+r.error.message);return;}showErr("");tasks=r.data;render();});}
-    function render(){
-      var list=document.getElementById("list");
-      var shown=tasks.filter(function(t){return filter==="alle"||t.status===filter;});
-      list.innerHTML="";
-      if(!shown.length){list.innerHTML='<li class="empty">Keine Aufgaben.</li>';}
-      var today=new Date().toISOString().slice(0,10);
-      shown.forEach(function(t){
-        var li=document.createElement("li");
-        li.className="task"+(t.status==="Erledigt"?" done":"");
-        var cls=t.status==="Offen"?"offen":t.status==="In Arbeit"?"arbeit":"erledigt";
-        var over=t.due&&t.due<today&&t.status!=="Erledigt";
-        li.innerHTML='<span class="prio '+t.prio+'" title="Priorität: '+t.prio+'"></span>'+'<span class="title">'+esc(t.title)+'</span>'+'<span class="meta">'+(t.who?"👤 "+esc(t.who):"")+(t.due?'<span class="due'+(over?" over":"")+'">📅 '+fmtDate(t.due)+(over?" ⚠️":"")+"</span>":"")+'</span>'+'<button class="badge '+cls+'" title="Klicken zum Weiterschalten">'+t.status+'</button>'+'<button class="del" title="Löschen">✕</button>';
-        li.querySelector(".badge").onclick=function(){var next=STATUS[(STATUS.indexOf(t.status)+1)%STATUS.length];t.status=next;render();sb.from("todos").update({status:next}).eq("id",t.id).then(function(r){if(r.error){showErr("Fehler beim Speichern: "+r.error.message);fetchTasks();}});};
-        li.querySelector(".del").onclick=function(){if(!confirm(t.title+" löschen?"))return;tasks=tasks.filter(function(x){return x!==t;});render();sb.from("todos").delete().eq("id",t.id).then(function(r){if(r.error){showErr("Fehler beim Löschen: "+r.error.message);fetchTasks();}});};
-        list.appendChild(li);
-      });
-      var done=tasks.filter(function(t){return t.status==="Erledigt";}).length;
-      document.getElementById("stats").textContent=tasks.length?done+" / "+tasks.length+" erledigt":"";
-      var seen={};var opts="";
-      tasks.forEach(function(t){if(t.who&&!seen[t.who]){seen[t.who]=1;opts+='<option value="'+esc(t.who)+'">';}});
-      document.getElementById("people").innerHTML=opts;
-    }
-    document.getElementById("addForm").onsubmit=function(e){
-      e.preventDefault();
-      var btn=document.getElementById("addBtn");
-      btn.disabled=true;
-      var row={title:document.getElementById("fTitle").value.trim(),who:document.getElementById("fWho").value.trim(),due:document.getElementById("fDue").value||null,prio:document.getElementById("fPrio").value,status:"Offen"};
-      sb.from("todos").insert(row).then(function(r){
-        btn.disabled=false;
-        if(r.error){showErr("Fehler beim Anlegen: "+r.error.message);return;}
-        document.getElementById("addForm").reset();
-        document.getElementById("fTitle").focus();
-        fetchTasks();
-      });
+      <input id="fTitle" type="text" placeholder="Neue Aufgabe…" required>
+      <input id="fWho" type="text" placeholder="Zuständig" list="people">
+      <datalist id="people"></datalist>
+      <input id="fDue" type="date" title="Fällig am">
+      <select id="fPrio">
+        <option>Mittel</option><option>Hoch</option><option>Niedrig</option>
+      </select>
+      <button class="btn-primary" id="addBtn" type="submit">Hinzufügen</button>
+    </form>
+  </div>
+
+  <div class="toolbar">
+    <button class="chip active" data-f="alle">Alle</button>
+    <button class="chip" data-f="Offen">Offen</button>
+    <button class="chip" data-f="In Arbeit">In Arbeit</button>
+    <button class="chip" data-f="Erledigt">Erledigt</button>
+    <span class="spacer"></span>
+    <span class="stats" id="stats"></span>
+  </div>
+
+  <ul id="list"><li class="empty">Lade Aufgaben…</li></ul>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const sb = supabase.createClient(
+  "https://hbbizdljommgweemprso.supabase.co",
+  "sb_publishable_7ygG8u4rjp5lX6PplyzLlQ_mJfSBsO7"
+);
+const STATUS = ["Offen", "In Arbeit", "Erledigt"];
+let tasks = [];
+let filter = "alle";
+
+function showErr(msg) {
+  const el = document.getElementById("err");
+  el.textContent = msg;
+  el.style.display = msg ? "block" : "none";
+}
+function fmtDate(d) {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return day + "." + m + "." + y;
+}
+function esc(s) {
+  const div = document.createElement("div");
+  div.textContent = s || "";
+  return div.innerHTML;
+}
+
+async function fetchTasks() {
+  const { data, error } = await sb.from("todos").select("*").order("created_at", { ascending: false });
+  if (error) { showErr("Fehler beim Laden: " + error.message); return; }
+  showErr("");
+  tasks = data;
+  render();
+}
+
+function render() {
+  const list = document.getElementById("list");
+  const shown = tasks.filter(t => filter === "alle" || t.status === filter);
+  list.innerHTML = "";
+  if (!shown.length) {
+    list.innerHTML = '<li class="empty">Keine Aufgaben' + (filter !== "alle" ? " mit Status „" + filter + "“" : "") + '.</li>';
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  for (const t of shown) {
+    const li = document.createElement("li");
+    li.className = "task" + (t.status === "Erledigt" ? " done" : "");
+    const cls = t.status === "Offen" ? "offen" : t.status === "In Arbeit" ? "arbeit" : "erledigt";
+    const over = t.due && t.due < today && t.status !== "Erledigt";
+    li.innerHTML =
+      '<span class="prio ' + t.prio + '" title="Priorität: ' + t.prio + '"></span>' +
+      '<span class="title">' + esc(t.title) + '</span>' +
+      '<span class="meta">' +
+        (t.who ? "👤 " + esc(t.who) : "") +
+        (t.due ? '<span class="due' + (over ? " over" : "") + '">📅 ' + fmtDate(t.due) + (over ? " ⚠️" : "") + "</span>" : "") +
+      '</span>' +
+      '<button class="badge ' + cls + '" title="Klicken zum Weiterschalten">' + t.status + '</button>' +
+      '<button class="del" title="Löschen">✕</button>';
+    li.querySelector(".badge").onclick = async () => {
+      const next = STATUS[(STATUS.indexOf(t.status) + 1) % STATUS.length];
+      t.status = next; render();
+      const { error } = await sb.from("todos").update({ status: next }).eq("id", t.id);
+      if (error) { showErr("Fehler beim Speichern: " + error.message); fetchTasks(); }
     };
-    document.querySelectorAll(".chip[data-f]").forEach(function(btn){
-      btn.onclick=function(){
-        filter=btn.getAttribute("data-f");
-        document.querySelectorAll(".chip[data-f]").forEach(function(b){b.classList.toggle("active",b===btn);});
-        render();
-      };
-    });
-    sb.channel("todos-changes").on("postgres_changes",{event:"*",schema:"public",table:"todos"},fetchTasks).subscribe(function(status){
-      var el=document.getElementById("conn");
-      if(status==="SUBSCRIBED"){el.textContent="live";el.classList.add("live");}
-      else{el.textContent="";}
-    });
-    setInterval(fetchTasks,30000);
-    fetchTasks();
-  </script>
-  </body>
-</html>html>
-  </script></option></option></h1>
-  </body>
-  </style></title>
-  </head>
+    li.querySelector(".del").onclick = async () => {
+      if (!confirm("„" + t.title + "“ löschen?")) return;
+      tasks = tasks.filter(x => x !== t); render();
+      const { error } = await sb.from("todos").delete().eq("id", t.id);
+      if (error) { showErr("Fehler beim Löschen: " + error.message); fetchTasks(); }
+    };
+    list.appendChild(li);
+  }
+  const done = tasks.filter(t => t.status === "Erledigt").length;
+  document.getElementById("stats").textContent = tasks.length ? done + " / " + tasks.length + " erledigt" : "";
+  const people = [...new Set(tasks.map(t => t.who).filter(Boolean))];
+  document.getElementById("people").innerHTML = people.map(p => '<option value="' + esc(p) + '">').join("");
+}
+
+document.getElementById("addForm").onsubmit = async e => {
+  e.preventDefault();
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+  const row = {
+    title: document.getElementById("fTitle").value.trim(),
+    who: document.getElementById("fWho").value.trim(),
+    due: document.getElementById("fDue").value || null,
+    prio: document.getElementById("fPrio").value,
+    status: "Offen"
+  };
+  const { error } = await sb.from("todos").insert(row);
+  btn.disabled = false;
+  if (error) { showErr("Fehler beim Anlegen: " + error.message); return; }
+  e.target.reset();
+  document.getElementById("fTitle").focus();
+  fetchTasks();
+};
+
+document.querySelectorAll(".chip[data-f]").forEach(btn => {
+  btn.onclick = () => {
+    filter = btn.dataset.f;
+    document.querySelectorAll(".chip[data-f]").forEach(b => b.classList.toggle("active", b === btn));
+    render();
+  };
+});
+
+// Live-Sync: Realtime + Fallback-Polling
+sb.channel("todos-changes")
+  .on("postgres_changes", { event: "*", schema: "public", table: "todos" }, fetchTasks)
+  .subscribe(status => {
+    const el = document.getElementById("conn");
+    if (status === "SUBSCRIBED") { el.textContent = "live"; el.classList.add("live"); }
+    else { el.textContent = ""; }
+  });
+setInterval(fetchTasks, 30000);
+fetchTasks();
+</script>
+</body>
+</html>
