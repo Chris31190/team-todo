@@ -88,11 +88,11 @@ li.task.done .title{text-decoration:line-through;color:var(--muted)}
 <button class="chip" data-f="In Arbeit">In Arbeit</button>
 <button class="chip" data-f="Erledigt">Erledigt</button>
 <span class="spacer"></span>
-<button class="btn-ghost" id="importBtn" title="Aufgaben aus PDF oder Word-Datei importieren">📄 Liste importieren</button>
+<button class="btn-ghost" id="importBtn" title="Aufgaben aus PDF-, Word- oder OpenDocument-Datei importieren">📄 Liste importieren</button>
 <button class="btn-ghost" id="installBtn" title="Als App installieren">⬇️ App installieren</button>
 <span class="stats" id="stats"></span>
 </div>
-<input type="file" id="fileInput" accept=".pdf,.docx" style="display:none">
+<input type="file" id="fileInput" accept=".pdf,.docx,.odt" style="display:none">
 <ul id="list"><li class="empty">Lade Aufgaben…</li></ul>
 </div>
 
@@ -112,6 +112,7 @@ li.task.done .title{text-decoration:line-through;color:var(--muted)}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 var sb = supabase.createClient("https://hbbizdljommgweemprso.supabase.co","sb_publishable_7ygG8u4rjp5lX6PplyzLlQ_mJfSBsO7");
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -189,7 +190,14 @@ var ys=Object.keys(byLine).map(Number).sort(function(a,b){return b-a;});
 return ys.map(function(y){return byLine[y].join(" ");}).join("\n");
 });});}));
 }).then(function(pageTexts){parseLines(pageTexts.join("\n"));}).catch(function(err){showErr("PDF konnte nicht gelesen werden: "+err.message);});
-}else{showErr("Bitte eine .pdf- oder .docx-Datei wählen.");}
+}else if(name.endsWith(".odt")){
+JSZip.loadAsync(buf).then(function(zip){var f=zip.file("content.xml");if(!f)throw new Error("content.xml fehlt");return f.async("string");}).then(function(xml){
+var doc=new DOMParser().parseFromString(xml,"application/xml");
+var nodes=doc.getElementsByTagName("*");var lines=[];
+for(var i=0;i<nodes.length;i++){var ln=nodes[i].localName;if(ln==="p"||ln==="h"){var txt=nodes[i].textContent;if(txt)lines.push(txt);}}
+parseLines(lines.join("\n"));
+}).catch(function(err){showErr("ODT konnte nicht gelesen werden: "+err.message);});
+}else{showErr("Bitte eine .pdf-, .docx- oder .odt-Datei wählen.");}
 };
 document.getElementById("fileInput").value="";
 };
