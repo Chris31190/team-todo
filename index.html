@@ -19,7 +19,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 h1{font-size:1.5rem;margin-bottom:4px}
 .sub{color:var(--muted);font-size:.9rem;margin-bottom:20px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
-form#addForm{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px}
+form#addForm{display:grid;grid-template-columns:2fr 1.4fr 1fr 1fr 1fr auto;gap:8px}
 @media(max-width:700px){form#addForm{grid-template-columns:1fr 1fr}}
 input,select,button{font:inherit;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
@@ -42,6 +42,10 @@ li.task.done .title{text-decoration:line-through;color:var(--muted)}
 .badge.offen{background:var(--open)}.badge.arbeit{background:var(--progress)}.badge.erledigt{background:var(--done)}
 .prio{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
 .prio.Hoch{background:var(--hi)}.prio.Mittel{background:var(--mid)}.prio.Niedrig{background:var(--lo)}
+.num{min-width:24px;text-align:right;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;flex-shrink:0}
+.note-inp{flex:1 1 180px;min-width:120px;border:1px solid var(--border);border-radius:6px;padding:6px 8px;font:inherit;font-size:.85rem;color:var(--text);background:#fafafa}
+.note-inp::placeholder{color:#c0c4cc}
+.note-inp:focus{outline:2px solid var(--accent);outline-offset:-1px;background:#fff}
 .due.over{color:var(--hi);font-weight:600}
 .del{background:none;border:none;color:var(--muted);font-size:1.1rem;padding:4px 8px}
 .del:hover{color:var(--hi)}
@@ -75,6 +79,7 @@ li.task.done .title{text-decoration:line-through;color:var(--muted)}
 <div class="card">
 <form id="addForm">
 <input id="fTitle" type="text" placeholder="Neue Aufgabe…" required>
+<input id="fNote" type="text" placeholder="Notiz (optional)">
 <input id="fWho" type="text" placeholder="Zuständig" list="people">
 <datalist id="people"></datalist>
 <input id="fDue" type="date" title="Fällig am">
@@ -122,19 +127,24 @@ var filter = "alle";
 function showErr(msg){var el=document.getElementById("err");el.textContent=msg;el.style.display=msg?"block":"none";}
 function fmtDate(d){if(!d)return "";var p=d.split("-");return p[2]+"."+p[1]+"."+p[0];}
 function esc(s){var div=document.createElement("div");div.textContent=s||"";return div.innerHTML;}
-function fetchTasks(){sb.from("todos").select("*").order("created_at",{ascending:false}).then(function(r){if(r.error){showErr("Fehler beim Laden: "+r.error.message);return;}showErr("");tasks=r.data;render();});}
+function fetchTasks(){sb.from("todos").select("*").order("pos",{ascending:true,nullsFirst:false}).order("created_at",{ascending:true}).then(function(r){if(r.error){showErr("Fehler beim Laden: "+r.error.message);return;}showErr("");tasks=r.data;render();});}
+function nextPos(){var mx=0;tasks.forEach(function(t){if(typeof t.pos==="number"&&t.pos>mx)mx=t.pos;});return mx+1;}
 function render(){
 var list=document.getElementById("list");
 var shown=tasks.filter(function(t){return filter==="alle"||t.status===filter;});
 list.innerHTML="";
 if(!shown.length){list.innerHTML='<li class="empty">Keine Aufgaben.</li>';}
 var today=new Date().toISOString().slice(0,10);
-shown.forEach(function(t){
+shown.forEach(function(t,idx){
 var li=document.createElement("li");
 li.className="task"+(t.status==="Erledigt"?" done":"");
 var cls=t.status==="Offen"?"offen":t.status==="In Arbeit"?"arbeit":"erledigt";
 var over=t.due&&t.due<today&&t.status!=="Erledigt";
-li.innerHTML='<span class="prio '+t.prio+'" title="Priorität: '+t.prio+'"></span>'+'<span class="title">'+esc(t.title)+'</span>'+'<span class="meta">'+(t.who?"👤 "+esc(t.who):"")+(t.due?'<span class="due'+(over?" over":"")+'">📅 '+fmtDate(t.due)+(over?" ⚠️":"")+"</span>":"")+'</span>'+'<button class="badge '+cls+'" title="Klicken zum Weiterschalten">'+t.status+'</button>'+'<button class="del" title="Löschen">✕</button>';
+var num=(typeof t.pos==="number")?t.pos:(idx+1);
+li.innerHTML='<span class="num">'+num+'</span>'+'<span class="prio '+t.prio+'" title="Priorität: '+t.prio+'"></span>'+'<span class="title">'+esc(t.title)+'</span>'+'<input class="note-inp" placeholder="Notiz…" value="'+esc(t.note||"")+'" title="Notiz – wird automatisch gespeichert">'+'<span class="meta">'+(t.who?"👤 "+esc(t.who):"")+(t.due?'<span class="due'+(over?" over":"")+'">📅 '+fmtDate(t.due)+(over?" ⚠️":"")+"</span>":"")+'</span>'+'<button class="badge '+cls+'" title="Klicken zum Weiterschalten">'+t.status+'</button>'+'<button class="del" title="Löschen">✕</button>';
+var noteEl=li.querySelector(".note-inp");
+noteEl.onclick=function(e){e.stopPropagation();};
+noteEl.onchange=function(){var v=noteEl.value;t.note=v;sb.from("todos").update({note:v}).eq("id",t.id).then(function(r){if(r.error){showErr("Fehler beim Speichern der Notiz: "+r.error.message);fetchTasks();}});};
 li.querySelector(".badge").onclick=function(){var next=STATUS[(STATUS.indexOf(t.status)+1)%STATUS.length];t.status=next;render();sb.from("todos").update({status:next}).eq("id",t.id).then(function(r){if(r.error){showErr("Fehler beim Speichern: "+r.error.message);fetchTasks();}});};
 li.querySelector(".del").onclick=function(){if(!confirm(t.title+" löschen?"))return;tasks=tasks.filter(function(x){return x!==t;});render();sb.from("todos").delete().eq("id",t.id).then(function(r){if(r.error){showErr("Fehler beim Löschen: "+r.error.message);fetchTasks();}});};
 list.appendChild(li);
@@ -149,7 +159,7 @@ document.getElementById("addForm").onsubmit=function(e){
 e.preventDefault();
 var btn=document.getElementById("addBtn");
 btn.disabled=true;
-var row={title:document.getElementById("fTitle").value.trim(),who:document.getElementById("fWho").value.trim(),due:document.getElementById("fDue").value||null,prio:document.getElementById("fPrio").value,status:"Offen"};
+var row={title:document.getElementById("fTitle").value.trim(),note:document.getElementById("fNote").value.trim(),who:document.getElementById("fWho").value.trim(),due:document.getElementById("fDue").value||null,prio:document.getElementById("fPrio").value,status:"Offen",pos:nextPos()};
 sb.from("todos").insert(row).then(function(r){
 btn.disabled=false;
 if(r.error){showErr("Fehler beim Anlegen: "+r.error.message);return;}
@@ -236,9 +246,10 @@ var cb=li.querySelector('input[type=checkbox]');
 if(!cb.checked)return;
 var title=li.querySelector(".t").value.trim();
 if(!title)return;
-rows.push({title:title,who:"",due:null,prio:li.querySelector(".imp-prio").value,status:"Offen"});
+rows.push({title:title,note:"",who:"",due:null,prio:li.querySelector(".imp-prio").value,status:"Offen"});
 });
 if(!rows.length){document.getElementById("impOverlay").classList.remove("show");return;}
+var p=nextPos();rows.forEach(function(r){r.pos=p++;});
 var btn=document.getElementById("impConfirm");btn.disabled=true;btn.textContent="Übernehme…";
 sb.from("todos").insert(rows).then(function(r){
 btn.disabled=false;btn.textContent="Ausgewählte übernehmen";
